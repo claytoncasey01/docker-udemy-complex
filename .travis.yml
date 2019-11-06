@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t claytoncasey01/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true claytoncasey01/react-test yarn test -- --coverage
+
+after_success:
+  - docker build -t claytoncasey01/multi-client ./client
+  - docker build -t claytoncasey01/multi-nginx ./nginx
+  - docker build -t claytoncasey01/multi-server ./server
+  - docker build -t claytoncasey01/multi-worker ./worker
+  # Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push images to docker hub
+  - docker push claytoncasey01/multi-client
+  - docker push claytoncasey01/multi-nginx
+  - docker push claytoncasey01/multi-server
+  - docker push claytoncasey01/multi-worker
